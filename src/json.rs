@@ -244,6 +244,7 @@ pub mod parser {
                     Value::Str((&token.lexeme[1..(len - 1)]).to_string())
                 }
                 BracketOpen => self.array()?,
+                BraceOpen => self.object()?,
 
                 t => {
                     todo!("Unexpected token: {:?}", &t)
@@ -260,7 +261,7 @@ pub mod parser {
                     Some(t) => match &t.ty {
                         EoF => return Err(JsonError::raise("EoF")),
                         BracketClose => {
-                            self.succ(1);
+                            self.succ(1)?;
                             break;
                         }
                         _ => {
@@ -270,7 +271,7 @@ pub mod parser {
                                 None => return Err(JsonError::raise("EoF")),
                                 Some(t) => {
                                     if t.is(Comma) {
-                                        self.succ(1);
+                                        self.succ(1)?;
                                         let n = self.peek(0);
                                         if n.is_none() {
                                             return Err(JsonError::raise("EoF"));
@@ -290,7 +291,57 @@ pub mod parser {
         }
 
         fn object(&mut self) -> Result<Value, JsonError> {
-            Ok(Value::Null)
+            use TokenType::*;
+            let mut ha = HashMap::new();
+            loop {
+                match self.peek(0) {
+                    Some(t) => match &t.ty {
+                        EoF => return Err(JsonError::raise("EoF")),
+                        BraceClose => {
+                            self.succ(1)?;
+                            break;
+                        }
+                        _ => {
+                            let k = self.process_value()?;
+                            match self.peek(0) {
+                                None => return Err(JsonError::raise("EoF")),
+                                Some(t) => {
+                                    if t.is(Colon) {
+                                        self.succ(1)?;
+                                    } else {
+                                        return Err(JsonError::raise(format!(
+                                            "Unexpected token {:?}",
+                                            t.ty
+                                        )));
+                                    }
+                                }
+                            }
+                            let v = self.process_value()?;
+                            ha.insert(k, v);
+                            match self.peek(0) {
+                                None => return Err(JsonError::raise("EoF")),
+                                Some(t) => match t.ty {
+                                    BraceClose => {
+                                        continue;
+                                    }
+                                    Comma => {
+                                        self.succ(1)?;
+                                        continue;
+                                    }
+                                    other => {
+                                        return Err(JsonError::raise(format!(
+                                            "Unexpected token {:?}",
+                                            other
+                                        )));
+                                    }
+                                },
+                            }
+                        }
+                    },
+                    None => return Err(JsonError::raise("EoF")),
+                }
+            }
+            Ok(Value::Object(self.current, ha))
         }
 
         fn peek(&mut self, count: usize) -> Option<&Token> {
