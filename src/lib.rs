@@ -1,4 +1,5 @@
 pub mod json;
+pub mod ruby;
 
 #[cfg(test)]
 mod tests {

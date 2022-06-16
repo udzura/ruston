@@ -207,6 +207,8 @@ pub mod parser {
         pub stream: Vec<Token>,
         pub current: usize,
         pub value: Value,
+
+        next_object_id: usize,
     }
 
     impl Parser {
@@ -215,6 +217,7 @@ pub mod parser {
                 stream,
                 current: 0,
                 value: Value::Null,
+                next_object_id: (1 << 16),
             };
 
             parser.process()?;
@@ -341,7 +344,8 @@ pub mod parser {
                     None => return Err(JsonError::raise("EoF")),
                 }
             }
-            Ok(Value::Object(self.current, ha))
+            self.next_object_id += 1;
+            Ok(Value::Object(self.next_object_id, ha))
         }
 
         fn peek(&mut self, count: usize) -> Option<&Token> {
@@ -358,10 +362,6 @@ pub mod parser {
         fn succ(&mut self, count: usize) -> Result<&Token, JsonError> {
             self.current += count;
             self.previous().ok_or_else(|| JsonError::raise("EoF"))
-        }
-
-        fn is_end_of_stream(&mut self) -> bool {
-            self.current >= self.stream.len()
         }
 
         fn reached_end(&mut self) -> Result<bool, JsonError> {
