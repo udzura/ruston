@@ -67,9 +67,15 @@ fn walk(value: &json::Value) -> rb::RubyValue {
             }
             ary
         },
-        Object(_, ha) => {
-            todo!()
-        }
+        Object(_, ha) => unsafe {
+            let hash = rb::rb_hash_new();
+            for (k, v) in ha.iter() {
+                let rk = walk(k);
+                let rv = walk(v);
+                rb::rb_hash_aset(hash, rk, rv);
+            }
+            hash
+        },
     }
 }
 
