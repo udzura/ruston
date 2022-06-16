@@ -3,9 +3,15 @@ use std::{collections::HashMap, fmt::Display, hash::Hash};
 #[derive(Debug, Clone)]
 pub struct Token {
     pub start: usize,
-    pub current: usize,
+    pub end: usize,
     pub lexeme: String,
     pub ty: TokenType,
+}
+
+impl Token {
+    fn is(&self, ty: TokenType) -> bool {
+        self.ty == ty
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -17,10 +23,12 @@ pub enum TokenType {
     Colon,
     Comma,
     Number,
-    String,
+    StrLit,
     Null,
     True,
     False,
+
+    EoF,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -114,7 +122,7 @@ pub mod lexer {
                             .advance()
                             .or_else(|_| Err(JsonError::raise("quote unmet")))?;
                         if c == '"' {
-                            self.push_token(TokenType::String);
+                            self.push_token(TokenType::StrLit);
                             break;
                         }
                     },
@@ -124,7 +132,7 @@ pub mod lexer {
                     }
                     ' ' | '\t' => self.start = self.current,
                     '1'..='9' => {
-                        while is_digit(self.peek()?) {
+                        while is_digit(self.peek()) {
                             self.advance()?;
                         }
                         self.push_token(TokenType::Number);
@@ -132,19 +140,19 @@ pub mod lexer {
                     c => return Err(JsonError::raise(format!("unexpected token {}", c))),
                 }
                 if self.reached_end() {
+                    self.push_token(TokenType::EoF);
                     break;
                 }
             }
             Ok(())
         }
 
-        fn peek(&mut self) -> Result<char, JsonError> {
+        fn peek(&mut self) -> Option<char> {
             self.stream
                 .chars()
                 .collect::<Vec<char>>()
                 .get(self.current)
                 .map(|c| *c)
-                .ok_or_else(|| JsonError::raise("EoF"))
         }
 
         fn matches(&mut self, s: &str) -> Result<(), JsonError> {
@@ -158,32 +166,21 @@ pub mod lexer {
             Ok(())
         }
 
-        // fn match_one(&mut self, c: char) -> Result<bool, JsonError> {
-        //     Ok(true)
-        // }
-
         fn advance(&mut self) -> Result<char, JsonError> {
-            let c = self.peek()?;
+            let c = self.peek().ok_or_else(|| JsonError::raise("EoF"))?;
             // eprintln!("process: {}", c);
             self.current += 1;
-            if self.is_end_of_stream() {
-                return Err(JsonError::raise("Unexpected EoS"));
-            }
             Ok(c)
         }
 
-        fn is_end_of_stream(&mut self) -> bool {
-            self.current >= self.stream.len()
-        }
-
         fn reached_end(&mut self) -> bool {
-            self.current == (self.stream.len() - 1)
+            self.current >= self.stream.len()
         }
 
         fn push_token(&mut self, ty: TokenType) {
             let token = Token {
                 start: self.start,
-                current: self.current,
+                end: self.current,
                 lexeme: (&self.stream[self.start..self.current]).to_string(),
                 ty,
             };
@@ -194,7 +191,92 @@ pub mod lexer {
         }
     }
 
-    fn is_digit(c: char) -> bool {
-        c >= '0' && c <= '9'
+    fn is_digit(c: Option<char>) -> bool {
+        match c {
+            Some(c) => c >= '0' && c <= '9',
+            None => false,
+        }
     }
+}
+
+pub mod parser {
+    use super::*;
+
+    #[derive(Debug)]
+    pub struct Parser {
+        pub stream: Vec<Token>,
+        pub current: usize,
+        pub value: Value,
+    }
+
+    impl Parser {
+        pub fn run(stream: Vec<Token>) -> Result<Self, JsonError> {
+            let mut parser = Self {
+                stream,
+                current: 0,
+                value: Value::Null,
+            };
+
+            parser.process()?;
+            Ok(parser)
+        }
+
+        fn process(&mut self) -> Result<(), JsonError> {
+            use TokenType::*;
+            let token = self.succ(1)?;
+            let value = match &token.ty {
+                Null => Value::Null,
+                True => Value::True,
+                False => Value::False,
+                Number => Value::Int(token.lexeme.parse().unwrap()),
+                StrLit => {
+                    let len = token.lexeme.len();
+                    Value::Str((&token.lexeme[1..(len - 1)]).to_string())
+                }
+                t => {
+                    todo!("Unexpected token: {:?}", &t)
+                }
+            };
+            self.value = value;
+
+            if !self.reached_end()? {
+                return Err(JsonError::raise("JSON has continued form"));
+            }
+
+            Ok(())
+        }
+
+        fn peek(&mut self, count: usize) -> Option<&Token> {
+            self.stream.get(self.current + count)
+        }
+
+        fn previous(&mut self) -> Option<&Token> {
+            if self.current == 0 {
+                return None;
+            }
+            self.stream.get(self.current - 1)
+        }
+
+        fn succ(&mut self, count: usize) -> Result<&Token, JsonError> {
+            self.current += count;
+            self.previous()
+                .ok_or_else(|| JsonError::raise("Unreachable!"))
+        }
+
+        fn is_end_of_stream(&mut self) -> bool {
+            self.current >= self.stream.len()
+        }
+
+        fn reached_end(&mut self) -> Result<bool, JsonError> {
+            self.peek(0)
+                .map(|tok| tok.is(TokenType::EoF))
+                .ok_or_else(|| JsonError::raise("Parsed too far"))
+        }
+    }
+}
+
+pub fn parse(json: impl Into<String>) -> Value {
+    let tokens = self::lexer::Lex::run(json.into()).unwrap().tokens;
+    let value = self::parser::Parser::run(tokens).unwrap().value;
+    value
 }
