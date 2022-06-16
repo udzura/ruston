@@ -9,4 +9,7 @@ fn main() {
 
     let ret = ruston::json::parse("\"Hola\"");
     dbg!(ret);
+
+    let ret = ruston::json::parse("[1, 2, 3, false]");
+    dbg!(ret);
 }

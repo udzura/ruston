@@ -222,6 +222,16 @@ pub mod parser {
         }
 
         fn process(&mut self) -> Result<(), JsonError> {
+            self.value = self.process_value()?;
+
+            if !self.reached_end()? {
+                return Err(JsonError::raise("JSON has continued form"));
+            }
+
+            Ok(())
+        }
+
+        fn process_value(&mut self) -> Result<Value, JsonError> {
             use TokenType::*;
             let token = self.succ(1)?;
             let value = match &token.ty {
@@ -233,17 +243,54 @@ pub mod parser {
                     let len = token.lexeme.len();
                     Value::Str((&token.lexeme[1..(len - 1)]).to_string())
                 }
+                BracketOpen => self.array()?,
+
                 t => {
                     todo!("Unexpected token: {:?}", &t)
                 }
             };
-            self.value = value;
+            Ok(value)
+        }
 
-            if !self.reached_end()? {
-                return Err(JsonError::raise("JSON has continued form"));
+        fn array(&mut self) -> Result<Value, JsonError> {
+            use TokenType::*;
+            let mut ar = Vec::new();
+            loop {
+                match self.peek(0) {
+                    Some(t) => match &t.ty {
+                        EoF => return Err(JsonError::raise("EoF")),
+                        BracketClose => {
+                            self.succ(1);
+                            break;
+                        }
+                        _ => {
+                            let v = self.process_value()?;
+                            ar.push(v);
+                            match self.peek(0) {
+                                None => return Err(JsonError::raise("EoF")),
+                                Some(t) => {
+                                    if t.is(Comma) {
+                                        self.succ(1);
+                                        let n = self.peek(0);
+                                        if n.is_none() {
+                                            return Err(JsonError::raise("EoF"));
+                                        }
+                                        if n.unwrap().is(BracketClose) {
+                                            return Err(JsonError::raise("Unexpected ]"));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    None => return Err(JsonError::raise("EoF")),
+                }
             }
+            Ok(Value::Array(ar))
+        }
 
-            Ok(())
+        fn object(&mut self) -> Result<Value, JsonError> {
+            Ok(Value::Null)
         }
 
         fn peek(&mut self, count: usize) -> Option<&Token> {
@@ -259,8 +306,7 @@ pub mod parser {
 
         fn succ(&mut self, count: usize) -> Result<&Token, JsonError> {
             self.current += count;
-            self.previous()
-                .ok_or_else(|| JsonError::raise("Unreachable!"))
+            self.previous().ok_or_else(|| JsonError::raise("EoF"))
         }
 
         fn is_end_of_stream(&mut self) -> bool {
@@ -270,7 +316,7 @@ pub mod parser {
         fn reached_end(&mut self) -> Result<bool, JsonError> {
             self.peek(0)
                 .map(|tok| tok.is(TokenType::EoF))
-                .ok_or_else(|| JsonError::raise("Parsed too far"))
+                .ok_or_else(|| JsonError::raise("EoF"))
         }
     }
 }
