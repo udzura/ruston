@@ -78,31 +78,3 @@ fn walk(value: &json::Value) -> rb::RubyValue {
         },
     }
 }
-
-// fn walk(value: &json::Value) -> String {
-//     use json::Value::*;
-//     match value {
-//         Null => "null".to_string(),
-//         True => "true".to_string(),
-//         False => "false".to_string(),
-//         Int(_) => "int".to_string(),
-//         Str(_) => "str".to_string(),
-//         Array(v) => {
-//             let mut a = Vec::new(); // "Array.new"
-//             for e in v.iter() {
-//                 let vn = walk(e);
-//                 a.push(vn)
-//             }
-//             format!("{:?}", a)
-//         }
-//         Object(_, ha) => {
-//             let mut dest = HashMap::new(); // "Hash.new"
-//             for (k, v) in ha.iter() {
-//                 let rk = walk(k);
-//                 let rv = walk(v);
-//                 dest.insert(rk, rv);
-//             }
-//             format!("{:?}", dest)
-//         }
-//     }
-// }
