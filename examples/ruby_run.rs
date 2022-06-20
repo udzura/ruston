@@ -6,14 +6,18 @@ fn main() {
     // ";
 
     let json = "true";
-    ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    let ruby = ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    unsafe { rb::rb_p(ruby) };
 
     let json = "\"Rubyist?\"";
-    ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    let ruby = ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    unsafe { rb::rb_p(ruby) };
 
     let json = "[\"Rubyist?\", 12, null]";
-    ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    let ruby = ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    unsafe { rb::rb_p(ruby) };
 
     let json = "{\"Rubyist?\": true}";
-    ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    let ruby = ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    unsafe { rb::rb_p(ruby) };
 }

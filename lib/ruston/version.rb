@@ -1,3 +1,3 @@
-module Ruston
+class Ruston
   VERSION = "0.0.1"
 end
