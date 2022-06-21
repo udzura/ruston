@@ -1,6 +1,6 @@
 # Ruston
 
-[![Rust](https://github.com/udzura/ruston/actions/workflows/rust.yml/badge.svg)](https://github.com/udzura/ruston/actions/workflows/rust.yml)
+[![Rust](https://github.com/udzura/ruston/actions/workflows/rust.yml/badge.svg)](https://github.com/udzura/ruston/actions/workflows/rust.yml) [![Gem](https://badgen.net/rubygems/v/ruston)](https://rubygems.org/gems/ruston)
 
 A Rust-made JSON parser example
 
