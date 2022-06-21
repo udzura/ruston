@@ -7,3 +7,5 @@ gemspec
 
 gem "bundler", ">= 1.17"
 gem "rake", ">= 10.0"
+
+gem "json", ">= 2"
