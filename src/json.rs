@@ -131,6 +131,11 @@ pub mod lexer {
                         self.start = self.current
                     }
                     ' ' | '\t' => self.start = self.current,
+                    '0' => {
+                        // '0' is just 0, not consider 0.1 ... or 0100 ...
+                        // for now!
+                        self.push_token(TokenType::Number);
+                    }
                     '1'..='9' => {
                         while is_digit(self.peek()) {
                             self.advance()?;

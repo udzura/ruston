@@ -1,4 +1,7 @@
 pub mod json;
+#[cfg(test)]
+pub mod json_test;
+
 pub mod ruby;
 
 use std::slice;

@@ -1,4 +1,5 @@
 extern crate ruston;
+use rb_sys as rb;
 
 fn main() {
     //     let json = "
