@@ -10,3 +10,5 @@
 /target/
 
 *.gem
+
+.ruby-version

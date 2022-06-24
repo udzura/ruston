@@ -55,7 +55,7 @@ fn walk(value: &json::Value) -> rb::RubyValue {
         Int(i) => unsafe { rb::rb_int2big(*i as isize) },
         Str(s) => unsafe {
             let s = format!("{}\0", s);
-            rb::rb_utf8_str_new_cstr(s.as_ptr() as *const i8)
+            rb::rb_utf8_str_new_cstr(s.as_ptr())
         },
         Array(v) => unsafe {
             let ary = rb::rb_ary_new_capa(v.len() as i64);
