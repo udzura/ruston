@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ruston (0.0.3)
+    ruston (0.0.3.pre1)
 
 GEM
   remote: https://rubygems.org/
@@ -10,7 +10,6 @@ GEM
     rake (13.0.6)
 
 PLATFORMS
-  aarch64-linux
   arm64-darwin-21
 
 DEPENDENCIES
