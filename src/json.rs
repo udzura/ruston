@@ -248,7 +248,7 @@ pub mod parser {
                     let len = token.lexeme.len();
                     let strval: Box<str> =
                         String::from_utf8_lossy(&token.lexeme[1..(len - 1)]).into();
-                    Value::Str(&strval)
+                    Value::Str(Box::<str>::leak(strval))
                 }
                 BracketOpen => self.array()?,
                 BraceOpen => self.object()?,
