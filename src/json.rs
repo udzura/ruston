@@ -4,7 +4,7 @@ use std::{collections::HashMap, fmt::Display, hash::Hash};
 pub struct Token {
     pub start: usize,
     pub end: usize,
-    pub lexeme: String,
+    pub lexeme: &'static [u8],
     pub ty: TokenType,
 }
 
@@ -37,7 +37,7 @@ pub enum Value {
     True,
     False,
     Int(i32),
-    Str(String),
+    Str(&'static str),
     Array(Vec<Value>),
     Object(usize, HashMap<Value, Value>),
 }
@@ -77,7 +77,7 @@ pub mod lexer {
 
     #[derive(Debug, Default)]
     pub struct Lex {
-        pub stream: String,
+        pub stream: &'static [u8],
         pub start: usize,
         pub current: usize,
         pub line: usize,
@@ -87,6 +87,7 @@ pub mod lexer {
 
     impl Lex {
         pub fn run(stream: String) -> Result<Self, JsonError> {
+            let stream: &'static [u8] = stream.as_bytes().to_owned().leak();
             let mut lex = Self {
                 stream,
                 ..Default::default()
@@ -153,11 +154,7 @@ pub mod lexer {
         }
 
         fn peek(&mut self) -> Option<char> {
-            self.stream
-                .chars()
-                .collect::<Vec<char>>()
-                .get(self.current)
-                .map(|c| *c)
+            self.stream.get(self.current).map(|c| (*c as char))
         }
 
         fn matches(&mut self, s: &str) -> Result<(), JsonError> {
@@ -186,7 +183,7 @@ pub mod lexer {
             let token = Token {
                 start: self.start,
                 end: self.current,
-                lexeme: (&self.stream[self.start..self.current]).to_string(),
+                lexeme: (&self.stream[self.start..self.current]),
                 ty,
             };
 
@@ -246,10 +243,12 @@ pub mod parser {
                 Null => Value::Null,
                 True => Value::True,
                 False => Value::False,
-                Number => Value::Int(token.lexeme.parse().unwrap()),
+                Number => Value::Int(String::from_utf8_lossy(token.lexeme).parse().unwrap()),
                 StrLit => {
                     let len = token.lexeme.len();
-                    Value::Str((&token.lexeme[1..(len - 1)]).to_string())
+                    let strval: Box<str> =
+                        String::from_utf8_lossy(&token.lexeme[1..(len - 1)]).into();
+                    Value::Str(&strval)
                 }
                 BracketOpen => self.array()?,
                 BraceOpen => self.object()?,
