@@ -87,9 +87,12 @@ pub mod lexer {
 
     impl Lex {
         pub fn run(stream: String) -> Result<Self, JsonError> {
+            let len = stream.len();
             let stream: &'static [u8] = stream.as_bytes().to_owned().leak();
+            let tokens: Vec<Token> = Vec::with_capacity(len);
             let mut lex = Self {
                 stream,
+                tokens,
                 ..Default::default()
             };
 
