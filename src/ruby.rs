@@ -1,6 +1,6 @@
 use crate::json;
 
-use rb::RubyValue;
+// use rb::RubyValue;
 use rb_sys as rb;
 
 mod v {
@@ -55,7 +55,16 @@ fn walk(value: &json::Value) -> rb::RubyValue {
         Int(i) => unsafe { rb::rb_int2big(*i as isize) },
         Str(s) => unsafe {
             let s = format!("{}\0", s);
-            rb::rb_utf8_str_new_cstr(s.as_ptr())
+
+            #[cfg(target_os = "linux")]
+            {
+                rb::rb_utf8_str_new_cstr(s.as_ptr())
+            }
+
+            #[cfg(not(target_os = "linux"))]
+            {
+                rb::rb_utf8_str_new_cstr(s.as_ptr() as *const i8)
+            }
         },
         Array(v) => unsafe {
             let ary = rb::rb_ary_new_capa(v.len() as i64);
