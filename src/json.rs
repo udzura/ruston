@@ -1,14 +1,14 @@
 use std::{collections::HashMap, fmt::Display, hash::Hash};
 
 #[derive(Debug, Clone)]
-pub struct Token {
+pub struct Token<'a> {
     pub start: usize,
     pub end: usize,
-    pub lexeme: &'static [u8],
+    pub lexeme: &'a [u8],
     pub ty: TokenType,
 }
 
-impl Token {
+impl<'a> Token<'a> {
     fn is(&self, ty: TokenType) -> bool {
         self.ty == ty
     }
@@ -76,19 +76,18 @@ pub mod lexer {
     use super::*;
 
     #[derive(Debug, Default)]
-    pub struct Lex {
-        pub stream: &'static [u8],
+    pub struct Lex<'a> {
+        pub stream: &'a [u8],
         pub start: usize,
         pub current: usize,
         pub line: usize,
 
-        pub tokens: Vec<Token>,
+        pub tokens: Vec<Token<'a>>,
     }
 
-    impl Lex {
-        pub fn run(stream: String) -> Result<Self, JsonError> {
+    impl<'a> Lex<'a> {
+        pub fn run(stream: &'a [u8]) -> Result<Self, JsonError> {
             let len = stream.len();
-            let stream: &'static [u8] = stream.as_bytes().to_owned().leak();
             let tokens: Vec<Token> = Vec::with_capacity(len);
             let mut lex = Self {
                 stream,
@@ -208,16 +207,16 @@ pub mod parser {
     use super::*;
 
     #[derive(Debug)]
-    pub struct Parser {
-        pub stream: Vec<Token>,
+    pub struct Parser<'a> {
+        pub stream: Vec<Token<'a>>,
         pub current: usize,
         pub value: Value,
 
         next_object_id: usize,
     }
 
-    impl Parser {
-        pub fn run(stream: Vec<Token>) -> Result<Self, JsonError> {
+    impl<'a> Parser<'a> {
+        pub fn run(stream: Vec<Token<'a>>) -> Result<Self, JsonError> {
             let mut parser = Self {
                 stream,
                 current: 0,
@@ -379,8 +378,8 @@ pub mod parser {
     }
 }
 
-pub fn parse(json: impl Into<String>) -> Value {
-    let tokens = self::lexer::Lex::run(json.into()).unwrap().tokens;
+pub fn parse(json: &[u8]) -> Value {
+    let tokens = self::lexer::Lex::run(json).unwrap().tokens;
     let value = self::parser::Parser::run(tokens).unwrap().value;
     value
 }

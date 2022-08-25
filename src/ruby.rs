@@ -1,6 +1,5 @@
 use crate::json;
 
-// use rb::RubyValue;
 use rb_sys as rb;
 
 mod v {
@@ -38,8 +37,8 @@ mod v {
     };
 }
 
-pub fn parse_into_ruby(json: String) -> Result<rb::RubyValue, Box<dyn std::error::Error>> {
-    unsafe { rb::ruby_init() };
+pub fn parse_into_ruby(json: &[u8]) -> Result<rb::RubyValue, Box<dyn std::error::Error>> {
+    // unsafe { rb::ruby_init() };
 
     let value = json::parse(json);
     let ruby = walk(&value);
