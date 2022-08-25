@@ -52,10 +52,10 @@ impl From<unsafe extern "C" fn(RubyValue, RubyValue) -> RubyValue> for RubyFn {
 #[no_mangle]
 pub unsafe extern "C" fn ruston_parse(_slf: RubyValue, json: RubyValue) -> RubyValue {
     let mut json = Box::new(json);
-    let data: *const u8 = unsafe { rb_string_value_ptr(json.as_mut()) } as *const u8;
-    let len = unsafe { macros::RSTRING_LEN(json.as_ref().clone()) };
+    let data: *const u8 = rb_string_value_ptr(json.as_mut()) as *const u8;
+    let len = macros::RSTRING_LEN(json.as_ref().clone());
 
-    let bytes: &[u8] = unsafe { slice::from_raw_parts(data, len as usize) };
+    let bytes: &[u8] = slice::from_raw_parts(data, len as usize);
     let json = String::from_utf8_lossy(bytes);
 
     crate::ruby::parse_into_ruby(json.to_string()).unwrap()
