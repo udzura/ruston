@@ -56,12 +56,12 @@ fn walk(value: &json::Value) -> rb::RubyValue {
         Str(s) => unsafe {
             let s = format!("{}\0", s);
 
-            #[cfg(target_os = "linux")]
+            #[cfg(all(target_os = "linux", target_arch = "aarch64"))]
             {
                 rb::rb_utf8_str_new_cstr(s.as_ptr())
             }
 
-            #[cfg(not(target_os = "linux"))]
+            #[cfg(any(not(target_os = "linux"), not(target_arch = "aarch64")))]
             {
                 rb::rb_utf8_str_new_cstr(s.as_ptr() as *const i8)
             }
