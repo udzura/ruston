@@ -6,19 +6,19 @@ fn main() {
     // {\"Hello\": true, \"world\": [1, 2, 3]}
     // ";
 
-    let json = "true";
-    let ruby = ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    let json = b"true";
+    let ruby = ruston::ruby::parse_into_ruby(json).unwrap();
     unsafe { rb::rb_p(ruby) };
 
-    let json = "\"Rubyist?\"";
-    let ruby = ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    let json = b"\"Rubyist?\"";
+    let ruby = ruston::ruby::parse_into_ruby(json).unwrap();
     unsafe { rb::rb_p(ruby) };
 
-    let json = "[\"Rubyist?\", 12, null]";
-    let ruby = ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    let json = b"[\"Rubyist?\", 12, null]";
+    let ruby = ruston::ruby::parse_into_ruby(json).unwrap();
     unsafe { rb::rb_p(ruby) };
 
-    let json = "{\"Rubyist?\": true}";
-    let ruby = ruston::ruby::parse_into_ruby(json.to_string()).unwrap();
+    let json = b"{\"Rubyist?\": true}";
+    let ruby = ruston::ruby::parse_into_ruby(json).unwrap();
     unsafe { rb::rb_p(ruby) };
 }

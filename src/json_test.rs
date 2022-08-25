@@ -5,13 +5,13 @@ pub mod test {
 
     #[test]
     fn test_literal() -> Result<(), Box<dyn Error>> {
-        let ret = json::parse("true");
+        let ret = json::parse(b"true");
         assert!(match ret {
             json::Value::True => true,
             _ => false,
         });
 
-        let ret = json::parse("123");
+        let ret = json::parse(b"123");
         assert!(match ret {
             json::Value::Int(i) => {
                 assert_eq!(123, i);
@@ -20,7 +20,7 @@ pub mod test {
             _ => false,
         });
 
-        let ret = json::parse("0");
+        let ret = json::parse(b"0");
         assert!(match ret {
             json::Value::Int(i) => {
                 assert_eq!(0, i);
@@ -29,16 +29,16 @@ pub mod test {
             _ => false,
         });
 
-        let ret = json::parse("\"Hola\"");
+        let ret = json::parse(b"\"Hola\"");
         assert!(match ret {
             json::Value::Str(s) => {
-                assert_eq!("Hola", &s);
+                assert_eq!("Hola", s);
                 true
             }
             _ => false,
         });
 
-        let ret = json::parse("[1, 2, 3, false]");
+        let ret = json::parse(b"[1, 2, 3, false]");
         assert!(match ret {
             json::Value::Array(vec) => {
                 assert_eq!(4, vec.len());
@@ -47,7 +47,7 @@ pub mod test {
             _ => false,
         });
 
-        let ret = json::parse("{\"foo\": true, \"bar\": 123}");
+        let ret = json::parse(b"{\"foo\": true, \"bar\": 123}");
         assert!(match ret {
             json::Value::Object(_, _) => true,
             _ => false,

@@ -1,11 +1,9 @@
 extern crate ruston;
 
 fn main() {
-    let json = "
+    let json = b"
 {\"Hello\": true, \"world\": [1, 2, 3]}
 ";
-    let ret = ruston::json::lexer::Lex::run(json.to_string())
-        .unwrap()
-        .tokens;
+    let ret = ruston::json::lexer::Lex::run(json).unwrap().tokens;
     dbg!(ret);
 }

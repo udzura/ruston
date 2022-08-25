@@ -1,22 +1,22 @@
 extern crate ruston;
 
 fn main() {
-    let ret = ruston::json::parse("true");
+    let ret = ruston::json::parse(b"true");
     dbg!(ret);
 
-    let ret = ruston::json::parse("123");
+    let ret = ruston::json::parse(b"123");
     dbg!(ret);
 
-    let ret = ruston::json::parse("\"Hola\"");
+    let ret = ruston::json::parse(b"\"Hola\"");
     dbg!(ret);
 
-    let ret = ruston::json::parse("[1, 2, 3, false]");
+    let ret = ruston::json::parse(b"[1, 2, 3, false]");
     dbg!(ret);
 
-    let ret = ruston::json::parse("{\"foo\": true, \"bar\": 123}");
+    let ret = ruston::json::parse(b"{\"foo\": true, \"bar\": 123}");
     dbg!(ret);
 
-    let nested = "
+    let nested = b"
 {
   \"id\": 1,
   \"user\": {
