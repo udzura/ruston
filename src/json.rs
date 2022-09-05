@@ -87,8 +87,11 @@ pub mod lexer {
 
     impl<'a> Lex<'a> {
         pub fn run(stream: &'a [u8]) -> Result<Self, JsonError> {
+            let len = stream.len();
+            let tokens: Vec<Token> = Vec::with_capacity(len);
             let mut lex = Self {
                 stream,
+                tokens,
                 ..Default::default()
             };
 
