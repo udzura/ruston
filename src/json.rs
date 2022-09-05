@@ -1,14 +1,14 @@
 use std::{collections::HashMap, fmt::Display, hash::Hash};
 
 #[derive(Debug, Clone)]
-pub struct Token {
+pub struct Token<'a> {
     pub start: usize,
     pub end: usize,
-    pub lexeme: String,
+    pub lexeme: &'a [u8],
     pub ty: TokenType,
 }
 
-impl Token {
+impl<'a> Token<'a> {
     fn is(&self, ty: TokenType) -> bool {
         self.ty == ty
     }
@@ -76,17 +76,17 @@ pub mod lexer {
     use super::*;
 
     #[derive(Debug, Default)]
-    pub struct Lex {
-        pub stream: String,
+    pub struct Lex<'a> {
+        pub stream: &'a [u8],
         pub start: usize,
         pub current: usize,
         pub line: usize,
 
-        pub tokens: Vec<Token>,
+        pub tokens: Vec<Token<'a>>,
     }
 
-    impl Lex {
-        pub fn run(stream: String) -> Result<Self, JsonError> {
+    impl<'a> Lex<'a> {
+        pub fn run(stream: &'a [u8]) -> Result<Self, JsonError> {
             let mut lex = Self {
                 stream,
                 ..Default::default()
@@ -153,11 +153,7 @@ pub mod lexer {
         }
 
         fn peek(&mut self) -> Option<char> {
-            self.stream
-                .chars()
-                .collect::<Vec<char>>()
-                .get(self.current)
-                .map(|c| *c)
+            self.stream.get(self.current).map(|c| (*c as char))
         }
 
         fn matches(&mut self, s: &str) -> Result<(), JsonError> {
@@ -186,7 +182,7 @@ pub mod lexer {
             let token = Token {
                 start: self.start,
                 end: self.current,
-                lexeme: (&self.stream[self.start..self.current]).to_string(),
+                lexeme: (&self.stream[self.start..self.current]),
                 ty,
             };
 
@@ -208,16 +204,16 @@ pub mod parser {
     use super::*;
 
     #[derive(Debug)]
-    pub struct Parser {
-        pub stream: Vec<Token>,
+    pub struct Parser<'a> {
+        pub stream: Vec<Token<'a>>,
         pub current: usize,
         pub value: Value,
 
         next_object_id: usize,
     }
 
-    impl Parser {
-        pub fn run(stream: Vec<Token>) -> Result<Self, JsonError> {
+    impl<'a> Parser<'a> {
+        pub fn run(stream: Vec<Token<'a>>) -> Result<Self, JsonError> {
             let mut parser = Self {
                 stream,
                 current: 0,
@@ -246,10 +242,10 @@ pub mod parser {
                 Null => Value::Null,
                 True => Value::True,
                 False => Value::False,
-                Number => Value::Int(token.lexeme.parse().unwrap()),
+                Number => Value::Int(String::from_utf8_lossy(token.lexeme).parse().unwrap()),
                 StrLit => {
                     let len = token.lexeme.len();
-                    Value::Str((&token.lexeme[1..(len - 1)]).to_string())
+                    Value::Str(String::from_utf8_lossy(&token.lexeme[1..(len - 1)]).to_string())
                 }
                 BracketOpen => self.array()?,
                 BraceOpen => self.object()?,
@@ -377,8 +373,8 @@ pub mod parser {
     }
 }
 
-pub fn parse(json: impl Into<String>) -> Value {
-    let tokens = self::lexer::Lex::run(json.into()).unwrap().tokens;
+pub fn parse(json: &[u8]) -> Value {
+    let tokens = self::lexer::Lex::run(json).unwrap().tokens;
     let value = self::parser::Parser::run(tokens).unwrap().value;
     value
 }

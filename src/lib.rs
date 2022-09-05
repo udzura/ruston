@@ -56,9 +56,8 @@ pub unsafe extern "C" fn ruston_parse(_slf: RubyValue, json: RubyValue) -> RubyV
     let len = macros::RSTRING_LEN(json.as_ref().clone());
 
     let bytes: &[u8] = slice::from_raw_parts(data, len as usize);
-    let json = String::from_utf8_lossy(bytes);
 
-    crate::ruby::parse_into_ruby(json.to_string()).unwrap()
+    crate::ruby::parse_into_ruby(bytes).unwrap()
 }
 
 fn init_ruston_internal() -> Result<(), Box<dyn std::error::Error>> {
